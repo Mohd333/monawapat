@@ -1,0 +1,194 @@
+<!DOCTYPE html>  
+<html lang="ar">  
+<head>  
+    <meta charset="UTF-8">  
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">  
+    <title>مشاركة المناوبة عبر واتساب</title>  
+    <style>  
+        body {  
+            font-family: 'Arial', sans-serif;  
+            direction: rtl;  
+            padding: 20px;  
+        }  
+        select, button, input[type="text"] {  
+            width: 100%;  
+            padding: 10px;  
+            margin-bottom: 10px;  
+            font-size: 16px;  
+            border-radius: 5px;  
+            border: 1px solid #ccc;  
+        }  
+        button {  
+            background-color: #25D366;  
+            color: white;  
+            border: none;  
+        }  
+        button:hover {  
+            background-color: #20b857;  
+        }  
+    </style>  
+</head>  
+<body>  
+
+    <h2>إعداد رسالة المناوبة</h2>  
+    <div>  
+        <label>مناوبة الفسحة والمصلى (اضغط Ctrl أو Cmd لاختيار متعدد):</label>  
+        <select id="firstDuty" multiple size="5"></select>  
+    </div>  
+
+    <div>  
+        <label>مناوبة نهاية الدوام:</label>  
+        <select id="secondDuty">  
+            <option value="">اختر اسم</option>  
+        </select>  
+    </div>  
+
+    <div>  
+        <label>مكان المناوبة (اختر من القائمة أو اكتب مكانًا جديدًا):</label>  
+        <select id="dutyLocation">  
+            <option value="المكتب">المكتب</option>  
+            <option value="الساحة">الساحة</option>  
+            <option value="المصلى">المصلى</option>  
+            <option value="أخرى">أخرى (اكتب أدناه)</option>  
+        </select>  
+        <input type="text" id="newDutyLocation" placeholder="اكتب مكانًا جديدًا" style="display: none;">  
+    </div>  
+
+    <button onclick="shareOnWhatsApp()">مشاركة عبر واتساب</button>  
+
+    <script>  
+        let names = [];  
+        let whatsappMessage = "";  
+
+        async function loadData() {  
+            const response = await fetch('data.json');  
+            const data = await response.json();  
+            names = data.names;  
+            whatsappMessage = data.whatsappMessage;  
+            populateNames();  
+        }  
+
+        function populateNames() {  
+            const firstDutySelect = document.getElementById('firstDuty');  
+            const secondDutySelect = document.getElementById('secondDuty');  
+
+            names.forEach(name => {  
+                let option1 = document.createElement('option');  
+                option1.value = name;  
+                option1.textContent = name;  
+                firstDutySelect.appendChild(option1);  
+
+                let option2 = document.createElement('option');  
+                option2.value = name;  
+                option2.textContent = name;  
+                secondDutySelect.appendChild(option2);  
+            });  
+        }  
+
+        function convertToHijri(gDate) {  
+            const M = 30.6001;  
+            const Y_ = gDate.getFullYear();  
+            const M_ = gDate.getMonth() + 1;  
+            const D_ = gDate.getDate();  
+
+            const JDN = 367 * Y_ - Math.floor((7 * (Y_ + Math.floor((M_ + 9) / 12))) / 4) + Math.floor((275 * M_) / 9) + D_ + 1721013.5;  
+
+            const epochastro = 1948084;  
+            const epochcivil = 1948085;  
+
+            const shift1 = epochcivil - epochastro;  
+            const z = JDN - epochastro;  
+            const cyc = Math.floor(z / 10631);  
+            const j = z - 10631 * cyc;  
+            const y = Math.floor((j - shift1) / 354.366);  
+            const years = 30 * cyc + y;  
+            const month = Math.min(12, Math.floor((j - shift1 - 354.366 * y) / 29.5) + 1);  
+            const day = j - shift1 - Math.floor(354.366 * y) - Math.floor(29.5 * (month - 1)) + 1;  
+
+            return `${Math.floor(day)}-${month}-${years}`;  
+        }  
+
+        function arabicNumbers(input) {  
+            const arabicDigits = ['٠', '١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩'];  
+            return input.toString().replace(/\d/g, (d) => arabicDigits[d]);  
+        }  
+
+        function shareOnWhatsApp() {  
+            const firstDuty = Array.from(document.getElementById('firstDuty').selectedOptions)  
+                .map((opt, index) => `${index + 1}️⃣ ${opt.value}`).join('\n');  
+            const secondDuty = document.getElementById('secondDuty').value;  
+            const dutyLocationSelect = document.getElementById('dutyLocation');  
+            let dutyLocation = dutyLocationSelect.value;  
+
+            if (dutyLocation === 'أخرى') {  
+                dutyLocation = document.getElementById('newDutyLocation').value;  
+            }  
+
+            const today = new Date();  
+            const dayName = today.toLocaleDateString('ar-EG', { weekday: 'long' });  
+            const gregorianDate = today.toLocaleDateString('en-GB', { year: 'numeric', month: 'numeric', day: 'numeric' }).replace(/\//g, '-');  
+            const hijriDate = convertToHijri(today);  
+            const hijriDateArabic = hijriDate.split('-').map(arabicNumbers).join('-');  
+
+            let message = whatsappMessage.replace('{dayName}', dayName)  
+                                         .replace('{gregorianDate}', gregorianDate)  
+                                         .replace('{hijriDateArabic}', hijriDateArabic)  
+                                         .replace('{firstDuty}', firstDuty)  
+                                         .replace('{secondDuty}', secondDuty);  
+
+            const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);  
+            const whatsappUrl = isMobile  
+                ? `whatsapp://send?text=${encodeURIComponent(message)}`  
+                : `https://api.whatsapp.com/send?text=${encodeURIComponent(message)}`;  
+
+            window.open(whatsappUrl, '_blank');  
+            
+            // هنا يمكنك استدعاء دالة لطباعة التقرير  
+            printReport(firstDuty, secondDuty, dutyLocation, dayName, gregorianDate);  
+        }  
+        
+        function printReport(firstDuty, secondDuty, dutyLocation, dayName, gregorianDate) {  
+            let reportContent = `  
+                <h2>تقرير المناوبة</h2>  
+                <p><b>اليوم:</b> ${dayName}</p>  
+                <p><b>التاريخ الميلادي:</b> ${gregorianDate}</p>  
+                <p><b>مكان المناوبة:</b> ${dutyLocation}</p>  
+                <h3>مناوبة الفسحة والمصلى:</h3>  
+                <p>${firstDuty}</p>  
+                <h3>مناوبة نهاية الدوام:</h3>  
+                <p>${secondDuty}</p>  
+            `;  
+
+            let printWindow = window.open('', '_blank');  
+            printWindow.document.write(`  
+                <html>  
+                <head>  
+                    <title>تقرير المناوبة</title>  
+                    <style>  
+                        body { font-family: Arial, sans-serif; direction: rtl; }  
+                        h2, h3 { text-align: center; }  
+                        p { margin-bottom: 10px; }  
+                    </style>  
+                </head>  
+                <body>  
+                    ${reportContent}  
+                </body>  
+                </html>  
+            `);  
+            printWindow.document.close();  
+            printWindow.print();  
+        }  
+
+        document.getElementById('dutyLocation').addEventListener('change', function() {  
+            if (this.value === 'أخرى') {  
+                document.getElementById('newDutyLocation').style.display = 'block';  
+            } else {  
+                document.getElementById('newDutyLocation').style.display = 'none';  
+            }  
+        });  
+
+        window.onload = loadData;  
+    </script>  
+
+</body>  
+</html>  
