@@ -3,58 +3,90 @@
 <head>  
     <meta charset="UTF-8">  
     <meta name="viewport" content="width=device-width, initial-scale=1.0">  
-    <title>مشاركة المناوبة عبر واتساب</title>  
+    <title>تطبيق المناوبة</title>  
     <style>  
         body {  
             font-family: 'Arial', sans-serif;  
             direction: rtl;  
             padding: 20px;  
         }  
-        select, button, input[type="text"] {  
+        label {  
+            display: block;  
+            margin-bottom: 5px;  
+            font-weight: bold;  
+        }  
+        select, button, input[type="text"], textarea {  
             width: 100%;  
             padding: 10px;  
             margin-bottom: 10px;  
             font-size: 16px;  
             border-radius: 5px;  
             border: 1px solid #ccc;  
+            box-sizing: border-box; /* مهم لحساب العرض بشكل صحيح */  
+        }  
+        select[multiple] {  
+            height: 150px; /* لضمان ظهور عدة خيارات */  
         }  
         button {  
             background-color: #25D366;  
             color: white;  
             border: none;  
+            cursor: pointer;  
         }  
         button:hover {  
             background-color: #20b857;  
+        }  
+        #printButton {  
+            background-color: #007bff; /* لون أزرق للطباعة */  
+        }  
+        #printButton:hover {  
+            background-color: #0056b3;  
+        }  
+        #newDutyLocation {  
+            display: none;  
+        }  
+        #notes {  
+            height: 100px;  
+        }  
+        .hidden {  
+            display: none;  
         }  
     </style>  
 </head>  
 <body>  
 
     <h2>إعداد رسالة المناوبة</h2>  
+
     <div>  
-        <label>مناوبة الفسحة والمصلى (اضغط Ctrl أو Cmd لاختيار متعدد):</label>  
-        <select id="firstDuty" multiple size="5"></select>  
+        <label>اختر أسماء المعلمين المناوبين (اضغط Ctrl أو Cmd لاختيار متعدد):</label>  
+        <select id="teachers" multiple size="5"></select>  
     </div>  
 
     <div>  
-        <label>مناوبة نهاية الدوام:</label>  
-        <select id="secondDuty">  
-            <option value="">اختر اسم</option>  
-        </select>  
-    </div>  
-
-    <div>  
-        <label>مكان المناوبة (اختر من القائمة أو اكتب مكانًا جديدًا):</label>  
-        <select id="dutyLocation">  
+        <label>أماكن المناوبة (اختر متعدد):</label>  
+        <select id="dutyLocations" multiple size="4">  
             <option value="المكتب">المكتب</option>  
             <option value="الساحة">الساحة</option>  
             <option value="المصلى">المصلى</option>  
             <option value="أخرى">أخرى (اكتب أدناه)</option>  
         </select>  
-        <input type="text" id="newDutyLocation" placeholder="اكتب مكانًا جديدًا" style="display: none;">  
+        <input type="text" id="newDutyLocation" placeholder="اكتب مكانًا جديدًا" class="hidden">  
+    </div>  
+
+    <div>  
+        <label>مناوبة نهاية الدوام:</label>  
+        <select id="endOfDayDuty">  
+            <option value="">اختر اسم</option>  
+        </select>  
+    </div>  
+
+    <div>  
+        <label>ملاحظات إضافية:</label>  
+        <textarea id="notes" placeholder="أضف ملاحظات هنا"></textarea>  
     </div>  
 
     <button onclick="shareOnWhatsApp()">مشاركة عبر واتساب</button>  
+    <button id="printButton" onclick="printReport()">طباعة التقرير</button>  
 
     <script>  
         let names = [];  
@@ -65,23 +97,23 @@
             const data = await response.json();  
             names = data.names;  
             whatsappMessage = data.whatsappMessage;  
-            populateNames();  
+            populateDropdowns();  
         }  
 
-        function populateNames() {  
-            const firstDutySelect = document.getElementById('firstDuty');  
-            const secondDutySelect = document.getElementById('secondDuty');  
+        function populateDropdowns() {  
+            const teachersSelect = document.getElementById('teachers');  
+            const endOfDayDutySelect = document.getElementById('endOfDayDuty');  
 
             names.forEach(name => {  
                 let option1 = document.createElement('option');  
                 option1.value = name;  
                 option1.textContent = name;  
-                firstDutySelect.appendChild(option1);  
+                teachersSelect.appendChild(option1);  
 
                 let option2 = document.createElement('option');  
                 option2.value = name;  
                 option2.textContent = name;  
-                secondDutySelect.appendChild(option2);  
+                endOfDayDutySelect.appendChild(option2);  
             });  
         }  
 
@@ -114,15 +146,21 @@
         }  
 
         function shareOnWhatsApp() {  
-            const firstDuty = Array.from(document.getElementById('firstDuty').selectedOptions)  
+            const teachers = Array.from(document.getElementById('teachers').selectedOptions)  
                 .map((opt, index) => `${index + 1}️⃣ ${opt.value}`).join('\n');  
-            const secondDuty = document.getElementById('secondDuty').value;  
-            const dutyLocationSelect = document.getElementById('dutyLocation');  
-            let dutyLocation = dutyLocationSelect.value;  
-
-            if (dutyLocation === 'أخرى') {  
-                dutyLocation = document.getElementById('newDutyLocation').value;  
+            const dutyLocations = Array.from(document.getElementById('dutyLocations').selectedOptions)  
+                .map(opt => opt.value);  
+            if (dutyLocations.includes('أخرى')) {  
+                const newLocation = document.getElementById('newDutyLocation').value;  
+                if (newLocation) {  
+                    dutyLocations[dutyLocations.indexOf('أخرى')] = newLocation;  
+                } else {  
+                    dutyLocations.splice(dutyLocations.indexOf('أخرى'), 1); // Remove "أخرى" if no new location is entered  
+                }  
             }  
+            const dutyLocationsText = dutyLocations.join(', ');  
+            const endOfDayDuty = document.getElementById('endOfDayDuty').value;  
+            const notes = document.getElementById('notes').value;  
 
             const today = new Date();  
             const dayName = today.toLocaleDateString('ar-EG', { weekday: 'long' });  
@@ -133,8 +171,10 @@
             let message = whatsappMessage.replace('{dayName}', dayName)  
                                          .replace('{gregorianDate}', gregorianDate)  
                                          .replace('{hijriDateArabic}', hijriDateArabic)  
-                                         .replace('{firstDuty}', firstDuty)  
-                                         .replace('{secondDuty}', secondDuty);  
+                                         .replace('{teachers}', teachers)  
+                                         .replace('{dutyLocations}', dutyLocationsText)  
+                                         .replace('{endOfDayDuty}', endOfDayDuty)  
+                                         .replace('{notes}', notes);  
 
             const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);  
             const whatsappUrl = isMobile  
@@ -142,21 +182,37 @@
                 : `https://api.whatsapp.com/send?text=${encodeURIComponent(message)}`;  
 
             window.open(whatsappUrl, '_blank');  
-            
-            // هنا يمكنك استدعاء دالة لطباعة التقرير  
-            printReport(firstDuty, secondDuty, dutyLocation, dayName, gregorianDate);  
         }  
-        
-        function printReport(firstDuty, secondDuty, dutyLocation, dayName, gregorianDate) {  
+
+        function printReport() {  
+            const teachers = Array.from(document.getElementById('teachers').selectedOptions)  
+                .map(opt => opt.value).join(', ');  
+            const dutyLocations = Array.from(document.getElementById('dutyLocations').selectedOptions)  
+                .map(opt => opt.value);  
+            if (dutyLocations.includes('أخرى')) {  
+                const newLocation = document.getElementById('newDutyLocation').value;  
+                if (newLocation) {  
+                    dutyLocations[dutyLocations.indexOf('أخرى')] = newLocation;  
+                } else {  
+                    dutyLocations.splice(dutyLocations.indexOf('أخرى'), 1); // Remove "أخرى" if no new location is entered  
+                }  
+            }  
+            const dutyLocationsText = dutyLocations.join(', ');  
+            const endOfDayDuty = document.getElementById('endOfDayDuty').value;  
+            const notes = document.getElementById('notes').value;  
+
+            const today = new Date();  
+            const dayName = today.toLocaleDateString('ar-EG', { weekday: 'long' });  
+            const gregorianDate = today.toLocaleDateString('en-GB', { year: 'numeric', month: 'numeric', day: 'numeric' }).replace(/\//g, '-');  
+
             let reportContent = `  
                 <h2>تقرير المناوبة</h2>  
                 <p><b>اليوم:</b> ${dayName}</p>  
                 <p><b>التاريخ الميلادي:</b> ${gregorianDate}</p>  
-                <p><b>مكان المناوبة:</b> ${dutyLocation}</p>  
-                <h3>مناوبة الفسحة والمصلى:</h3>  
-                <p>${firstDuty}</p>  
-                <h3>مناوبة نهاية الدوام:</h3>  
-                <p>${secondDuty}</p>  
+                <p><b>المعلمون المناوبون:</b> ${teachers}</p>  
+                <p><b>أماكن المناوبة:</b> ${dutyLocationsText}</p>  
+                <p><b>مناوبة نهاية الدوام:</b> ${endOfDayDuty}</p>  
+                <p><b>ملاحظات:</b> ${notes}</p>  
             `;  
 
             let printWindow = window.open('', '_blank');  
@@ -179,11 +235,12 @@
             printWindow.print();  
         }  
 
-        document.getElementById('dutyLocation').addEventListener('change', function() {  
-            if (this.value === 'أخرى') {  
-                document.getElementById('newDutyLocation').style.display = 'block';  
+        document.getElementById('dutyLocations').addEventListener('change', function() {  
+            const newDutyLocationInput = document.getElementById('newDutyLocation');  
+            if (this.value.includes('أخرى')) {  
+                newDutyLocationInput.classList.remove('hidden');  
             } else {  
-                document.getElementById('newDutyLocation').style.display = 'none';  
+                newDutyLocationInput.classList.add('hidden');  
             }  
         });  
 
