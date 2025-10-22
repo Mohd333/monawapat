@@ -1,225 +1,285 @@
-<!DOCTYPE html>  
-<html lang="ar">  
-<head>  
-    <meta charset="UTF-8">  
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">  
-    <title>تطبيق المناوبة</title>  
-    <!-- Bootstrap CSS -->  
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">  
-    <style>  
-        body {  
-            font-family: 'Arial', sans-serif;  
-            direction: rtl;  
-            padding: 20px;  
-        }  
-        label {  
-            font-weight: bold;  
-        }  
-        select[multiple] {  
-            height: 150px; /* لضمان ظهور عدة خيارات */  
-        }  
-        #newDutyLocation {  
-            display: none;  
-        }  
-    </style>  
-</head>  
-<body>  
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>مشاركة المناوبة عبر واتساب</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            direction: rtl;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        h2 {
+            color: #333;
+            text-align: center;
+        }
+        
+        .duty-section {
+            margin-bottom: 25px;
+        }
+        
+        label.section-title {
+            display: block;
+            font-size: 18px;
+            font-weight: bold;
+            color: #25D366;
+            margin-bottom: 10px;
+        }
+        
+        .checkbox-container {
+            max-height: 300px;
+            overflow-y: auto;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            padding: 10px;
+            background-color: #fafafa;
+        }
+        
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            padding: 8px;
+            margin-bottom: 5px;
+            background-color: white;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        
+        .checkbox-item:hover {
+            background-color: #e8f5e9;
+        }
+        
+        .checkbox-item input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            margin-left: 10px;
+            cursor: pointer;
+        }
+        
+        .checkbox-item label {
+            cursor: pointer;
+            flex-grow: 1;
+            font-size: 16px;
+        }
+        
+        select {
+            width: 100%;
+            padding: 10px;
+            font-size: 16px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+            background-color: white;
+        }
+        
+        button {
+            width: 100%;
+            padding: 15px;
+            font-size: 18px;
+            font-weight: bold;
+            border-radius: 5px;
+            border: none;
+            background-color: #25D366;
+            color: white;
+            cursor: pointer;
+            margin-top: 20px;
+        }
+        
+        button:hover {
+            background-color: #20b857;
+        }
+        
+        button:active {
+            background-color: #1da851;
+        }
+    </style>
+</head>
+<body>
 
-    <div class="container">  
-        <h2>إعداد رسالة المناوبة</h2>  
+    <div class="container">
+        <h2>إعداد رسالة المناوبة</h2>
+        
+        <div class="duty-section">
+            <label class="section-title">مناوبة الفسحة والمصلى:</label>
+            <div class="checkbox-container" id="firstDutyContainer">
+                <!-- سيتم إنشاء الخيارات هنا بواسطة JavaScript -->
+            </div>
+        </div>
 
-        <div class="form-group">  
-            <label for="teachers">اختر أسماء المعلمين المناوبين (اضغط Ctrl أو Cmd لاختيار متعدد):</label>  
-            <select class="form-control" id="teachers" multiple size="5"></select>  
-        </div>  
+        <div class="duty-section">
+            <label class="section-title">مناوبة نهاية الدوام:</label>
+            <select id="secondDuty">
+                <option value="">اختر اسم</option>
+                <!-- سيتم إنشاء الخيارات هنا بواسطة JavaScript -->
+            </select>
+        </div>
 
-        <div class="form-group">  
-            <label for="dutyLocations">أماكن المناوبة (اختر متعدد):</label>  
-            <select class="form-control" id="dutyLocations" multiple size="4">  
-                <option value="المكتب">المكتب</option>  
-                <option value="الساحة">الساحة</option>  
-                <option value="المصلى">المصلى</option>  
-                <option value="أخرى">أخرى (اكتب أدناه)</option>  
-            </select>  
-            <input type="text" class="form-control mt-2" id="newDutyLocation" placeholder="اكتب مكانًا جديدًا" style="display: none;">  
-        </div>  
+        <button onclick="shareOnWhatsApp()">مشاركة عبر واتساب</button>
+    </div>
 
-        <div class="form-group">  
-            <label for="endOfDayDuty">مناوبة نهاية الدوام:</label>  
-            <select class="form-control" id="endOfDayDuty">  
-                <option value="">اختر اسم</option>  
-            </select>  
-        </div>  
+    <script>
+        // قائمة المعلمين
+        const teachers = [
+            "سليمان بن محمد المغشي",
+            "بندر ابراهيم الحجيلان",
+            "نايف بن عبدالكريم الدخيل",
+            "عبدالرحمن خالد الحمود",
+            "عبدالقادر بن محمد آل طلحه",
+            "ناصر عبدالعزيز العجاجي",
+            "احمد يحي طوهري",
+            "سالم سعد القحطاني",
+            "تركي سالم الغامدي",
+            "سالم بن سليمان الشهري",
+            "محمد صالح الشهري",
+            "مشاري خليفه الملاح",
+            "عبدالرحيم فهد البوطويبه",
+            "ثمر عبدالله الدوسري",
+            "محمد احمد الغامدي",
+            "محمد سامي الريزان",
+            "رجائي آل آدم",
+            "فهد مبارك الفرجان",
+            "جهاد بن صالح الحفير",
+            "محمد بن علي القحطاني",
+            "عبدالرحمن ملفي العوفي",
+            "خالد بن حميد المالكي",
+            "صالح عبدالرحمن الطريخم",
+            "يوسف بن عبدالصمد الدليجان",
+            "محمد مبشر العمري",
+            "محمد بن احمد الحسني",
+            "سلطان علي الزهراني",
+            "فهد علي منذري",
+            "سلطان شريف المالكي",
+            "سعود عبدالعزيز العنزي"
+        ];
 
-        <div class="form-group">  
-            <label for="notes">ملاحظات إضافية:</label>  
-            <textarea class="form-control" id="notes" rows="3" placeholder="أضف ملاحظات هنا"></textarea>  
-        </div>  
+        // إنشاء checkboxes لمناوبة الفسحة والمصلى
+        const firstDutyContainer = document.getElementById('firstDutyContainer');
+        teachers.forEach((teacher, index) => {
+            const div = document.createElement('div');
+            div.className = 'checkbox-item';
+            
+            const checkbox = document.createElement('input');
+            checkbox.type = 'checkbox';
+            checkbox.id = `teacher_${index}`;
+            checkbox.value = teacher;
+            
+            const label = document.createElement('label');
+            label.htmlFor = `teacher_${index}`;
+            label.textContent = teacher;
+            
+            div.appendChild(checkbox);
+            div.appendChild(label);
+            firstDutyContainer.appendChild(div);
+            
+            // جعل النقر على الـ div يؤدي إلى تحديد/إلغاء تحديد الـ checkbox
+            div.addEventListener('click', function(e) {
+                if (e.target !== checkbox) {
+                    checkbox.checked = !checkbox.checked;
+                }
+            });
+        });
 
-        <button class="btn btn-success" onclick="shareOnWhatsApp()">مشاركة عبر واتساب</button>  
-        <button class="btn btn-primary" onclick="printReport()">طباعة التقرير</button>  
-    </div>  
+        // إنشاء خيارات لمناوبة نهاية الدوام
+        const secondDutySelect = document.getElementById('secondDuty');
+        teachers.forEach(teacher => {
+            const option = document.createElement('option');
+            option.value = teacher;
+            option.textContent = teacher;
+            secondDutySelect.appendChild(option);
+        });
 
-    <script>  
-        let names = [];  
-        let whatsappMessage = "";  
+        function convertToHijri(gDate) {
+            const M = 30.6001;
+            const Y_ = gDate.getFullYear();
+            const M_ = gDate.getMonth() + 1;
+            const D_ = gDate.getDate();
 
-        async function loadData() {  
-            const response = await fetch('data.json');  
-            const data = await response.json();  
-            names = data.names;  
-            whatsappMessage = data.whatsappMessage;  
-            populateDropdowns();  
-        }  
+            const JDN = 367 * Y_ - Math.floor((7 * (Y_ + Math.floor((M_ + 9) / 12))) / 4) + Math.floor((275 * M_) / 9) + D_ + 1721013.5;
 
-        function populateDropdowns() {  
-            const teachersSelect = document.getElementById('teachers');  
-            const endOfDayDutySelect = document.getElementById('endOfDayDuty');  
+            const epochastro = 1948084;
+            const epochcivil = 1948085;
 
-            names.forEach(name => {  
-                let option1 = document.createElement('option');  
-                option1.value = name;  
-                option1.textContent = name;  
-                teachersSelect.appendChild(option1);  
+            const shift1 = epochcivil - epochastro;
+            const z = JDN - epochastro;
+            const cyc = Math.floor(z / 10631);
+            const j = z - 10631 * cyc;
+            const y = Math.floor((j - shift1) / 354.366);
+            const years = 30 * cyc + y;
+            const month = Math.min(12, Math.floor((j - shift1 - 354.366 * y) / 29.5) + 1);
+            const day = j - shift1 - Math.floor(354.366 * y) - Math.floor(29.5 * (month - 1)) + 1;
 
-                let option2 = document.createElement('option');  
-                option2.value = name;  
-                option2.textContent = name;  
-                endOfDayDutySelect.appendChild(option2);  
-            });  
-        }  
+            return `${Math.floor(day)}-${month}-${years}`;
+        }
 
-        function convertToHijri(gDate) {  
-            const M = 30.6001;  
-            const Y_ = gDate.getFullYear();  
-            const M_ = gDate.getMonth() + 1;  
-            const D_ = gDate.getDate();  
+        function arabicNumbers(input) {
+            const arabicDigits = ['٠', '١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩'];
+            return input.toString().replace(/\d/g, (d) => arabicDigits[d]);
+        }
 
-            const JDN = 367 * Y_ - Math.floor((7 * (Y_ + Math.floor((M_ + 9) / 12))) / 4) + Math.floor((275 * M_) / 9) + D_ + 1721013.5;  
+        // دالة لإعادة ضبط جميع الاختيارات
+        function resetSelections() {
+            // إلغاء تحديد جميع الـ checkboxes
+            const checkboxes = document.querySelectorAll('#firstDutyContainer input[type="checkbox"]');
+            checkboxes.forEach(checkbox => {
+                checkbox.checked = false;
+            });
+            
+            // إعادة ضبط قائمة مناوبة نهاية الدوام
+            document.getElementById('secondDuty').value = "";
+        }
 
-            const epochastro = 1948084;  
-            const epochcivil = 1948085;  
+        function shareOnWhatsApp() {
+            // جمع المعلمين المختارين في مناوبة الفسحة والمصلى
+            const checkboxes = document.querySelectorAll('#firstDutyContainer input[type="checkbox"]:checked');
+            const firstDuty = Array.from(checkboxes)
+                .map((checkbox, index) => `${index + 1}️⃣ ${checkbox.value}`)
+                .join('\n');
+            
+            const secondDuty = document.getElementById('secondDuty').value;
+            
+            // التحقق من اختيار معلمين
+            if (!firstDuty) {
+                alert('الرجاء اختيار معلم واحد على الأقل لمناوبة الفسحة والمصلى');
+                return;
+            }
+            
+            if (!secondDuty) {
+                alert('الرجاء اختيار معلم لمناوبة نهاية الدوام');
+                return;
+            }
+            
+            const today = new Date();
+            const dayName = today.toLocaleDateString('ar-EG', { weekday: 'long' });
+            const gregorianDate = today.toLocaleDateString('en-GB', { year: 'numeric', month: 'numeric', day: 'numeric' }).replace(/\//g, '-');
 
-            const shift1 = epochcivil - epochastro;  
-            const z = JDN - epochastro;  
-            const cyc = Math.floor(z / 10631);  
-            const j = z - 10631 * cyc;  
-            const y = Math.floor((j - shift1) / 354.366);  
-            const years = 30 * cyc + y;  
-            const month = Math.min(12, Math.floor((j - shift1 - 354.366 * y) / 29.5) + 1);  
-            const day = j - shift1 - Math.floor(354.366 * y) - Math.floor(29.5 * (month - 1)) + 1;  
+            const hijriDate = convertToHijri(today);
+            const hijriDateArabic = hijriDate.split('-').map(arabicNumbers).join('-');
 
-            return `${Math.floor(day)}-${month}-${years}`;  
-        }  
+            const message = `السلام عليكم ورحمة الله..\n\n🔴 (( مناوبة هذا اليوم )) 🔴\n\n✨ ${dayName}\n\n📅 ${gregorianDate}\n🕌 ${hijriDateArabic}\n\n🟡 ( مناوبة الفسحة والمصلى ) 🟡\n\n${firstDuty}\n\n📌 ( مناوبة نهاية الدوام ) 📌\n\n${secondDuty}\n\n📝 *آمل من جميع الزملاء الالتزام بالمناوبة من بداية اليوم الدراسي ( الطابور الصباحي - الفسحة - الصلاة ).*\n\n📝 *الالتزام بمناوبة نهاية الدوام وتسجيل الطلاب المتأخرين في الانصراف في السجل الخاص بذلك.*`;
 
-        function arabicNumbers(input) {  
-            const arabicDigits = ['٠', '١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩'];  
-            return input.toString().replace(/\d/g, (d) => arabicDigits[d]);  
-        }  
+            const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+            const whatsappUrl = isMobile
+                ? `whatsapp://send?text=${encodeURIComponent(message)}`
+                : `https://api.whatsapp.com/send?text=${encodeURIComponent(message)}`;
 
-        function shareOnWhatsApp() {  
-            const teachers = Array.from(document.getElementById('teachers').selectedOptions)  
-                .map((opt, index) => `${index + 1}️⃣ ${opt.value}`).join('\n');  
-            const dutyLocations = Array.from(document.getElementById('dutyLocations').selectedOptions)  
-                .map(opt => opt.value);  
-            if (dutyLocations.includes('أخرى')) {  
-                const newLocation = document.getElementById('newDutyLocation').value;  
-                if (newLocation) {  
-                    dutyLocations[dutyLocations.indexOf('أخرى')] = newLocation;  
-                } else {  
-                    dutyLocations.splice(dutyLocations.indexOf('أخرى'), 1); // Remove "أخرى" if no new location is entered  
-                }  
-            }  
-            const dutyLocationsText = dutyLocations.join(', ');  
-            const endOfDayDuty = document.getElementById('endOfDayDuty').value;  
-            const notes = document.getElementById('notes').value;  
+            window.open(whatsappUrl, '_blank');
+            
+            // إعادة ضبط جميع الاختيارات بعد الإرسال
+            setTimeout(resetSelections, 1000);
+        }
+    </script>
 
-            const today = new Date();  
-            const dayName = today.toLocaleDateString('ar-EG', { weekday: 'long' });  
-            const gregorianDate = today.toLocaleDateString('en-GB', { year: 'numeric', month: 'numeric', day: 'numeric' }).replace(/\//g, '-');  
-            const hijriDate = convertToHijri(today);  
-            const hijriDateArabic = hijriDate.split('-').map(arabicNumbers).join('-');  
-
-            let message = whatsappMessage.replace('{dayName}', dayName)  
-                                         .replace('{gregorianDate}', gregorianDate)  
-                                         .replace('{hijriDateArabic}', hijriDateArabic)  
-                                         .replace('{teachers}', teachers)  
-                                         .replace('{dutyLocations}', dutyLocationsText)  
-                                         .replace('{endOfDayDuty}', endOfDayDuty)  
-                                         .replace('{notes}', notes);  
-
-            const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);  
-            const whatsappUrl = isMobile  
-                ? `whatsapp://send?text=${encodeURIComponent(message)}`  
-                : `https://web.whatsapp.com/send?text=${encodeURIComponent(message)}`;  
-
-            window.open(whatsappUrl, '_blank');  
-        }  
-
-        function printReport() {  
-            const teachers = Array.from(document.getElementById('teachers').selectedOptions)  
-                .map(opt => opt.value).join(', ');  
-            const dutyLocations = Array.from(document.getElementById('dutyLocations').selectedOptions)  
-                .map(opt => opt.value);  
-            if (dutyLocations.includes('أخرى')) {  
-                const newLocation = document.getElementById('newDutyLocation').value;  
-                if (newLocation) {  
-                    dutyLocations[dutyLocations.indexOf('أخرى')] = newLocation;  
-                } else {  
-                    dutyLocations.splice(dutyLocations.indexOf('أخرى'), 1); // Remove "أخرى" if no new location is entered  
-                }  
-            }  
-            const dutyLocationsText = dutyLocations.join(', ');  
-            const endOfDayDuty = document.getElementById('endOfDayDuty').value;  
-            const notes = document.getElementById('notes').value;  
-
-            const today = new Date();  
-            const dayName = today.toLocaleDateString('ar-EG', { weekday: 'long' });  
-            const gregorianDate = today.toLocaleDateString('en-GB', { year: 'numeric', month: 'numeric', day: 'numeric' }).replace(/\//g, '-');  
-
-            let reportContent = `  
-                <h2>تقرير المناوبة</h2>  
-                <p><b>اليوم:</b> ${dayName}</p>  
-                <p><b>التاريخ الميلادي:</b> ${gregorianDate}</p>  
-                <p><b>المعلمون المناوبون:</b> ${teachers}</p>  
-                <p><b>أماكن المناوبة:</b> ${dutyLocationsText}</p>  
-                <p><b>مناوبة نهاية الدوام:</b> ${endOfDayDuty}</p>  
-                <p><b>ملاحظات:</b> ${notes}</p>  
-            `;  
-
-            let printWindow = window.open('', '_blank');  
-            printWindow.document.write(`  
-                <html>  
-                <head>  
-                    <title>تقرير المناوبة</title>  
-                    <style>  
-                        body { font-family: Arial, sans-serif; direction: rtl; }  
-                        h2, h3 { text-align: center; }  
-                        p { margin-bottom: 10px; }  
-                    </style>  
-                </head>  
-                <body>  
-                    ${reportContent}  
-                </body>  
-                </html>  
-            `);  
-            printWindow.document.close();  
-            printWindow.print();  
-        }  
-
-        document.getElementById('dutyLocations').addEventListener('change', function() {  
-            const newDutyLocationInput = document.getElementById('newDutyLocation');  
-            if (this.selectedOptions.length > 0 && Array.from(this.selectedOptions).some(option => option.value === 'أخرى')) {  
-                 newDutyLocationInput.style.display = 'block';  
-            } else {  
-                newDutyLocationInput.style.display = 'none';  
-                newDutyLocationInput.value = ''; // Clear the input when "أخرى" is not selected  
-            }  
-        });  
-
-        window.onload = loadData;  
-    </script>  
-
-    <!-- Bootstrap JS (optional, but needed for some features) -->  
-    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>  
-    <script src="https://cdn.jsdelivr.net/npm/@popperjs/
+</body>
+</html>
